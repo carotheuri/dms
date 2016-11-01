@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script>
+        var map;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: {
+                    lat: -34.397,
+                    lng: 150.644
+                },
+                zoom: 8
+            });
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js"></script>
+</body>
+
+</html>
+
+<!--PHP Deprecated Codes -->
+<?php
+    
+    $hn = 'localhost';
+    $db = 'disastermanagement';
+    $un = 'root';
+    $pw = 'password';
+    
+    $conn = new mysqli($hn, $un, $pw, $db);
+    if ($conn->connect_error) die($conn->connect_error);
+    
+    function geocode($places){
+       $latitude = $data_arr[0];
+      $longitude = $data_arr[1];
+       $formatted_address = $data_arr[2];
+        
+        // url encode the address
+        $places = urlencode($places);
+        
+        // google map geocode api url
+        $url = "http://maps.google.com/maps/api/geocode/json?address={$places}";
+        
+        // get the json response
+        $resp_json = file_get_contents($url);
+        
+        // decode the json
+        $resp = json_decode($resp_json, true);
+        
+        // response status will be 'OK', if able to geocode given address
+        if($resp['status']=='OK'){
+            
+            // get the important data
+            $lati = $resp['results'][0]['geometry']['location']['lat'];
+            $longi = $resp['results'][0]['geometry']['location']['lng'];
+            $formatted_address = $resp['results'][0]['formatted_address'];
+            
+            // verify if data is complete
+            if($lati && $longi && $formatted_address){
+                
+                // put the data in the array
+                $data_arr = array();
+                
+                array_push(
+                $data_arr,
+                $lati,
+                $longi,
+                $formatted_address
+                );
+                
+                return $data_arr;
+                
+            }else{
+                return false;
+            }
+            
+        }else{
+            return false;
+        }
+    }
+    $query = "SELECT place FROM dms1";
+    $result = $conn->query($query);
+    if (!$result) die($conn->error);
+    $rows = $result->num_rows;
+    for ($i=0; $i < $rows; ++$i) {
+        # code...
+        $result->data_seek($i);
+        //echo $i+1 . ".  Place: " . $result->fetch_assoc()['place'] . '<br>';
+        $var = $result->fetch_assoc()['place'];
+        //echo $i+1 . ". Place: " . $var . '<br>';
+        $data_arr = geocode($var);
+        
+        if ($data_arr) {
+            # code...
+            $latitude = $data_arr[0];
+            $longitude = $data_arr[1];
+            $formatted_address = $data_arr[2];
+        }
+        
+    }
+    
+    $result->close();
+    $conn->close();
+    ?>
+
+    <!-- <script type="text/javascript" src="http://maps.google.com/maps/api/js"></script>
+     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAgMew92j2GTAtthu96_VT8fFUm_Vj0Jnk&callback=init_map"
+     async defer></script> -->
+
+    <script type="text/javascript">
+        function init_map() {
+            console.log(<?php echo $latitude; ?>);
+            var myOptions = {
+                zoom: 14,
+                center: new google.maps.LatLng(<?php echo $latitude; ?>, <?php echo $longitude; ?>),
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+            map = new google.maps.Map(document.getElementById("mapCanvas"), myOptions);
+            marker = new google.maps.Marker({
+                map: map,
+                position: new google.maps.LatLng(<?php echo $latitude; ?>, <?php echo $longitude; ?>)
+            });
+            infowindow = new google.maps.InfoWindow({
+                content: "<?php echo $formatted_address; ?>"
+            });
+            google.maps.event.addListener(marker, "click", function() {
+                infowindow.open(map, marker);
+            });
+            infowindow.open(map, marker);
+        }
+        google.maps.event.addDomListener(window, 'load', init_map);
+    </script>
