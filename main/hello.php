@@ -22,7 +22,15 @@ $json = json_encode($set);
    <script type="text/javascript">
    //<![CDATA[
 
-   var json_obj = jQuery.parseJSON ( '  <?php echo $json; ?>  ' );
+   //var json_obj = jQuery.parseJSON ( ' <?php echo $json; ?> ' );
 
    //]]>
+      $.ajax ( {
+       url: "hello.php",
+       dataType: "json",
+       success: function ( data, textStatus, jqXHR ) {
+           // process the data, you only need the "data" argument
+           // jQuery will automatically parse the JSON for you!
+       }
+   } );
    </script>
