@@ -13,6 +13,16 @@ $set[] =$row);
 
 $json = json_encode($set);
 
-echo $json;
+//echo $json;
 
 ?>
+
+   <script src="http://code.jquery.com/jquery.min.js" type="text/javascript"></script>
+
+   <script type="text/javascript">
+   //<![CDATA[
+
+   var json_obj = jQuery.parseJSON ( '  <?php echo $json; ?>  ' );
+
+   //]]>
+   </script>
